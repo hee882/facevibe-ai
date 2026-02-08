@@ -1,0 +1,22 @@
+name = "facevibe-ai"
+main = ".open-next/worker.js"
+compatibility_date = "2025-12-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Assets (static files)
+[assets]
+directory = ".open-next/assets"
+binding = "ASSETS"
+
+# Cloudflare D1 Database
+[[d1_databases]]
+binding = "DB"
+database_name = "facevibe-ai-db"
+database_id = "placeholder-create-with-wrangler-d1-create"
+
+# Environment variables (set via wrangler secret)
+# AZURE_FACE_KEY - Azure Face API key
+# AZURE_FACE_ENDPOINT - Azure Face API endpoint URL
+
+[vars]
+ENVIRONMENT = "production"
