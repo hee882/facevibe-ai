@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { Geist } from "next/font/google";
 import "./globals.css";
 
@@ -33,8 +34,36 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko">
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebApplication",
+              name: "FaceVibe AI",
+              description:
+                "AI가 분석하는 나의 매력 점수, 닮은 셀럽 Top 3, 얼굴형 분석",
+              applicationCategory: "EntertainmentApplication",
+              operatingSystem: "Web",
+              offers: {
+                "@type": "Offer",
+                price: "0",
+                priceCurrency: "KRW",
+              },
+            }),
+          }}
+        />
+      </head>
       <body className={`${geistSans.variable} font-sans antialiased`}>
         {children}
+        {/* Google AdSense — pub ID를 실제 값으로 교체 필요 */}
+        <Script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX"
+          crossOrigin="anonymous"
+          strategy="lazyOnload"
+        />
       </body>
     </html>
   );

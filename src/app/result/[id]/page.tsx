@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import CountUp from "@/components/CountUp";
 import ShareButtons from "@/components/ShareButtons";
+import AdBanner from "@/components/AdBanner";
 
 interface CelebrityMatch {
   name: string;
@@ -262,6 +263,9 @@ export default function ResultPage() {
             resultId={data.id}
           />
         </motion.div>
+
+        {/* 광고 */}
+        <AdBanner slot="result-bottom" className="w-full" />
 
         {/* 다시 하기 버튼 */}
         <motion.div
