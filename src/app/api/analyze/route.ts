@@ -3,6 +3,7 @@ import { detectFaces, AzureFaceError } from "@/lib/azure-face";
 import { calculateScore, extractFaceRatios } from "@/lib/scoring";
 import { matchCelebrities } from "@/lib/celebrity-match";
 import { classifyFaceType } from "@/lib/face-type";
+import { saveResult, generateId } from "@/lib/db";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
@@ -59,9 +60,20 @@ export async function POST(request: NextRequest) {
     const celebrityMatches = matchCelebrities(ratios);
     const faceType = classifyFaceType(mainFace.faceLandmarks, mainFace.faceRectangle);
 
-    // TODO: Step 4 D1 저장은 Cloudflare 환경에서만 동작
-    // 로컬 dev에서는 DB 없이 바로 결과 반환
-    const resultId = `fv_${Date.now().toString(36)}${Math.random().toString(36).substring(2, 10)}`;
+    // D1에 결과 저장 (Cloudflare 환경에서만 동작, 로컬 dev는 fallback)
+    let resultId: string;
+    try {
+      const { getCloudflareContext } = await import("@opennextjs/cloudflare");
+      const { env } = await getCloudflareContext();
+      resultId = await saveResult(env.DB, {
+        score,
+        celebrities: celebrityMatches,
+        faceType,
+      });
+    } catch {
+      // 로컬 dev 등 D1 없는 환경에서는 ID만 생성
+      resultId = generateId();
+    }
 
     return NextResponse.json({
       success: true,

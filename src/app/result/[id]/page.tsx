@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import CountUp from "@/components/CountUp";
@@ -75,10 +75,36 @@ function getStoredResult(id: string): AnalysisData | null {
 export default function ResultPage() {
   const params = useParams();
   const router = useRouter();
-  const data = useMemo(
-    () => getStoredResult(params.id as string),
-    [params.id]
-  );
+  const [data, setData] = useState<AnalysisData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const id = params.id as string;
+
+    // 1) sessionStorage 먼저 확인 (원래 유저는 즉시 로드)
+    const stored = getStoredResult(id);
+    if (stored) {
+      setData(stored);
+      setLoading(false);
+      return;
+    }
+
+    // 2) D1 API fallback (공유 링크 수신자)
+    fetch(`/api/result/${id}`)
+      .then((r) => (r.ok ? (r.json() as Promise<AnalysisData>) : null))
+      .then((d) => {
+        if (d) setData(d);
+      })
+      .finally(() => setLoading(false));
+  }, [params.id]);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-dvh flex-col items-center justify-center bg-background px-5">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    );
+  }
 
   if (!data) {
     return (

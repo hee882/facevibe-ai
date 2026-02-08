@@ -1,36 +1,83 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# FaceVibe AI
+
+> AI-powered face analysis — get your charm score, find your celebrity look-alike, and share with friends.
+
+Upload a photo, and our AI instantly analyzes your face to deliver a **charm score (0–100)**, your **top 3 celebrity look-alikes**, and a **face shape analysis**. No login required — just upload, discover, and share.
+
+## Features
+
+- **Charm Score** — AI calculates your attractiveness score based on facial golden ratio analysis
+- **Celebrity Look-alike** — Find your top 3 celebrity matches with similarity percentages
+- **Face Shape Analysis** — Detect your face shape (oval, round, heart, square, oblong) with personalized insights
+- **Viral Sharing** — Beautiful OG image cards optimized for Twitter, Instagram, KakaoTalk
+- **Zero Login** — Play instantly without signing up. No friction, just fun.
+- **Privacy First** — Photos are never stored. Processed in memory and immediately discarded.
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Frontend | Next.js 16 (App Router), TypeScript, Tailwind CSS, Framer Motion |
+| AI | Azure Face API |
+| Database | Cloudflare D1 (SQLite) |
+| Hosting | Cloudflare Pages + Workers |
+| OG Image | Satori |
+| Ads | Google AdSense |
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 20+
+- Azure Face API key ([Get free key — 30K calls/month](https://azure.microsoft.com/en-us/products/ai-services/ai-vision))
+
+### Setup
 
 ```bash
+# Install dependencies
+npm install
+
+# Copy environment variables
+cp .env.example .env.local
+# Edit .env.local with your Azure Face API credentials
+
+# Run development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) to see the app.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Cloudflare Deployment
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+# Preview locally with Cloudflare Workers
+npm run preview
 
-## Learn More
+# Deploy to production
+npm run deploy
+```
 
-To learn more about Next.js, take a look at the following resources:
+## How It Works
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+Upload Photo → AI Analysis (Azure Face API) → Score + Match + Shape → Result Page → Share
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. User uploads a face photo (drag & drop or camera)
+2. Image is sent to the server API route **in memory** (never saved to disk)
+3. Azure Face API detects the face and returns 27 facial landmarks
+4. Our scoring algorithm calculates the charm score based on golden ratio proportions
+5. Face descriptor vectors are compared against a celebrity database for look-alike matching
+6. Results are saved to D1 database with a unique shareable link
+7. User sees animated results and can share via social media
 
-## Deploy on Vercel
+## Privacy
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- Photos are **never stored** on any server
+- Images are processed in memory and immediately discarded after analysis
+- Only text results (score, celebrity matches, face type) are saved
+- This is an **entertainment service** — results are for fun, not medical or legal use
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## License
+
+MIT
