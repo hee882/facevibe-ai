@@ -16,7 +16,7 @@ function getShareUrl(resultId: string): string {
 }
 
 function getShareText(score: number, celebName: string): string {
-  return `FaceVibe AI 매력 점수 ${score}점! 닮은 셀럽은 ${celebName} 🎉 나도 분석해보기 →`;
+  return `나 ${celebName}이랑 닮았대! 매력 점수 ${score}점 🔥 넌 누구랑 닮았어? 궁금하면 해봐 →`;
 }
 
 export default function ShareButtons({
@@ -25,60 +25,66 @@ export default function ShareButtons({
   faceType,
   resultId,
 }: ShareButtonsProps) {
-  const [copied, setCopied] = useState(false);
+  const [toastMsg, setToastMsg] = useState<string | null>(null);
+
+  const showToast = (msg: string) => {
+    setToastMsg(msg);
+    setTimeout(() => setToastMsg(null), 3000);
+  };
 
   const shareUrl = getShareUrl(resultId);
   const shareText = getShareText(score, celebName);
 
-  const handleTwitter = () => {
-    const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
-    window.open(url, "_blank", "width=550,height=420");
+  const copyToClipboard = async (text: string): Promise<boolean> => {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+      const textarea = document.createElement("textarea");
+      textarea.value = text;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textarea);
+      return true;
+    }
   };
 
-  const handleKakao = () => {
+  const handleCopyLink = async () => {
+    await copyToClipboard(`${shareText} ${shareUrl}`);
+    showToast("링크가 복사되었어요!");
+  };
+
+  const handleKakao = async () => {
     if (typeof window !== "undefined" && window.Kakao?.Share) {
       window.Kakao.Share.sendDefault({
         objectType: "feed",
         content: {
-          title: `매력 점수 ${score}점!`,
-          description: `닮은 셀럽: ${celebName} · 얼굴형: ${faceType}`,
+          title: `나 ${celebName}이랑 닮았대! 매력 ${score}점`,
+          description: `얼굴형: ${faceType} · 넌 누구랑 닮았어? 궁금하면 해봐!`,
           imageUrl: `${window.location.origin}/api/og?score=${score}&celeb=${encodeURIComponent(celebName)}&type=${encodeURIComponent(faceType)}`,
           link: { mobileWebUrl: shareUrl, webUrl: shareUrl },
         },
         buttons: [
           {
-            title: "나도 분석해보기",
+            title: "오? 나도 해볼래!",
             link: { mobileWebUrl: shareUrl, webUrl: shareUrl },
           },
         ],
       });
     } else {
-      handleCopyLink();
-    }
-  };
-
-  const handleInstagram = () => {
-    // 인스타그램은 딥링크로 스토리 공유 유도, 폴백은 링크 복사
-    // 모바일에서만 동작 (데스크톱은 링크 복사 폴백)
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    if (isMobile) {
-      // 인스타 스토리 공유는 URL Scheme으로 앱 오픈 유도
-      // 실제 스토리 공유는 Instagram Graph API 또는 앱 내부에서만 가능
-      // 여기서는 인스타 앱을 열어서 사용자가 직접 공유하도록 유도
-      window.open("instagram://app", "_blank");
-      // 앱이 없으면 웹으로 폴백
-      setTimeout(() => {
-        handleCopyLink();
-      }, 1500);
-    } else {
-      handleCopyLink();
+      await copyToClipboard(`${shareText} ${shareUrl}`);
+      showToast("링크가 복사되었어요! 카카오톡에 붙여넣기 해주세요");
     }
   };
 
   const handleLine = () => {
     const text = `${shareText} ${shareUrl}`;
-    const url = `https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(text)}`;
-    window.open(url, "_blank", "width=550,height=520");
+    window.open(
+      `https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(text)}`,
+      "_blank",
+      "width=550,height=520"
+    );
   };
 
   const handleWhatsApp = () => {
@@ -89,51 +95,44 @@ export default function ShareButtons({
     );
   };
 
-  const handleCopyLink = async () => {
-    try {
-      await navigator.clipboard.writeText(`${shareText} ${shareUrl}`);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      const textarea = document.createElement("textarea");
-      textarea.value = `${shareText} ${shareUrl}`;
-      document.body.appendChild(textarea);
-      textarea.select();
-      document.execCommand("copy");
-      document.body.removeChild(textarea);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+  const handleInstagram = async () => {
+    await copyToClipboard(`${shareText} ${shareUrl}`);
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    if (isMobile) {
+      showToast("링크 복사 완료! 인스타그램 DM에 붙여넣기 해주세요");
+      setTimeout(() => window.open("instagram://app", "_blank"), 500);
+    } else {
+      showToast("링크 복사 완료! 인스타그램 DM에 붙여넣기 해주세요");
     }
+  };
+
+  const handleFacebook = () => {
+    window.open(
+      `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(shareText)}`,
+      "_blank",
+      "width=550,height=420"
+    );
+  };
+
+  const handleTwitter = () => {
+    window.open(
+      `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`,
+      "_blank",
+      "width=550,height=420"
+    );
   };
 
   return (
     <div className="flex flex-col items-center gap-4">
-      <p className="text-sm font-medium text-foreground/60">
-        친구에게 공유하기
-      </p>
-      <div className="flex gap-3">
-        {/* 트위터(X) */}
-        <button
-          onClick={handleTwitter}
-          className="flex h-12 w-12 items-center justify-center rounded-full bg-black text-white shadow-md transition-transform hover:scale-105"
-          aria-label="X(트위터)로 공유"
-        >
-          <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor">
-            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-          </svg>
-        </button>
-
-        {/* 인스타그램 */}
-        <button
-          onClick={handleInstagram}
-          className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-[#F58529] via-[#DD2A7B] to-[#8134AF] text-white shadow-md transition-transform hover:scale-105"
-          aria-label="인스타그램으로 공유"
-        >
-          <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor">
-            <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z" />
-          </svg>
-        </button>
-
+      <div className="text-center">
+        <p className="text-sm font-semibold text-foreground">
+          친구한테 자랑하기
+        </p>
+        <p className="mt-1 text-xs text-foreground/40">
+          &ldquo;넌 누구랑 닮았어?&rdquo; 친구도 궁금할걸요
+        </p>
+      </div>
+      <div className="flex flex-wrap justify-center gap-3">
         {/* 카카오톡 */}
         <button
           onClick={handleKakao}
@@ -167,6 +166,39 @@ export default function ShareButtons({
           </svg>
         </button>
 
+        {/* 인스타그램 */}
+        <button
+          onClick={handleInstagram}
+          className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-[#F58529] via-[#DD2A7B] to-[#8134AF] text-white shadow-md transition-transform hover:scale-105"
+          aria-label="인스타그램으로 공유"
+        >
+          <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor">
+            <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z" />
+          </svg>
+        </button>
+
+        {/* 페이스북 */}
+        <button
+          onClick={handleFacebook}
+          className="flex h-12 w-12 items-center justify-center rounded-full bg-[#1877F2] text-white shadow-md transition-transform hover:scale-105"
+          aria-label="페이스북으로 공유"
+        >
+          <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor">
+            <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+          </svg>
+        </button>
+
+        {/* X (트위터) */}
+        <button
+          onClick={handleTwitter}
+          className="flex h-12 w-12 items-center justify-center rounded-full bg-black text-white shadow-md transition-transform hover:scale-105"
+          aria-label="X(트위터)로 공유"
+        >
+          <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor">
+            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+          </svg>
+        </button>
+
         {/* 링크 복사 */}
         <button
           onClick={handleCopyLink}
@@ -189,16 +221,16 @@ export default function ShareButtons({
         </button>
       </div>
 
-      {/* 복사 완료 토스트 */}
+      {/* 안내 토스트 */}
       <AnimatePresence>
-        {copied && (
+        {toastMsg && (
           <motion.p
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 8 }}
-            className="text-sm font-medium text-emerald-500"
+            className="text-center text-sm font-medium text-emerald-500"
           >
-            링크가 복사되었어요!
+            {toastMsg}
           </motion.p>
         )}
       </AnimatePresence>
@@ -209,6 +241,8 @@ export default function ShareButtons({
 declare global {
   interface Window {
     Kakao?: {
+      isInitialized: () => boolean;
+      init: (key: string) => void;
       Share: {
         sendDefault: (options: unknown) => void;
       };

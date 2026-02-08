@@ -54,15 +54,17 @@ export async function GET(request: NextRequest) {
             alignItems: "center",
             background: "white",
             borderRadius: 32,
-            padding: "48px 64px",
+            padding: "40px 56px",
             boxShadow: "0 20px 60px rgba(0,0,0,0.3)",
-            gap: 8,
+            gap: 4,
+            maxWidth: 900,
           }}
         >
+          {/* 로고 */}
           <div
             style={{
               display: "flex",
-              fontSize: 32,
+              fontSize: 28,
               fontWeight: 700,
               gap: 8,
             }}
@@ -71,70 +73,136 @@ export async function GET(request: NextRequest) {
             <span style={{ color: "#171717" }}>AI</span>
           </div>
 
-          <div
-            style={{
-              display: "flex",
-              alignItems: "baseline",
-              marginTop: 16,
-              gap: 4,
-            }}
-          >
-            <span
-              style={{
-                fontSize: 120,
-                fontWeight: 700,
-                color: "#7c3aed",
-                lineHeight: 1,
-              }}
-            >
-              {score}
-            </span>
-            <span
-              style={{
-                fontSize: 36,
-                color: "#a1a1aa",
-                fontWeight: 700,
-              }}
-            >
-              점
-            </span>
-          </div>
-
-          {(celeb || faceType) && (
+          {/* 메인 메시지 */}
+          {celeb ? (
             <div
               style={{
                 display: "flex",
-                gap: 24,
-                marginTop: 16,
-                fontSize: 24,
-                color: "#52525b",
+                flexDirection: "column",
+                alignItems: "center",
+                marginTop: 20,
+                gap: 8,
               }}
             >
-              {celeb && (
-                <span style={{ display: "flex" }}>
-                  닮은 셀럽:{" "}
-                  <b style={{ color: "#171717", marginLeft: 4 }}>{celeb}</b>
+              <div
+                style={{
+                  display: "flex",
+                  fontSize: 42,
+                  fontWeight: 700,
+                  color: "#171717",
+                  textAlign: "center",
+                  lineHeight: 1.3,
+                }}
+              >
+                나 {celeb}이랑 닮았대!
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "baseline",
+                  gap: 6,
+                  marginTop: 8,
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: 80,
+                    fontWeight: 700,
+                    color: "#7c3aed",
+                    lineHeight: 1,
+                  }}
+                >
+                  {score}
                 </span>
-              )}
-              {faceType && (
-                <span style={{ display: "flex" }}>
-                  얼굴형:{" "}
-                  <b style={{ color: "#171717", marginLeft: 4 }}>{faceType}</b>
+                <span
+                  style={{
+                    fontSize: 28,
+                    color: "#a1a1aa",
+                    fontWeight: 700,
+                  }}
+                >
+                  점
                 </span>
-              )}
+              </div>
+            </div>
+          ) : (
+            <div
+              style={{
+                display: "flex",
+                alignItems: "baseline",
+                marginTop: 16,
+                gap: 4,
+              }}
+            >
+              <span
+                style={{
+                  fontSize: 100,
+                  fontWeight: 700,
+                  color: "#7c3aed",
+                  lineHeight: 1,
+                }}
+              >
+                {score}
+              </span>
+              <span
+                style={{
+                  fontSize: 32,
+                  color: "#a1a1aa",
+                  fontWeight: 700,
+                }}
+              >
+                점
+              </span>
+            </div>
+          )}
+
+          {/* 얼굴형 태그 */}
+          {faceType && (
+            <div
+              style={{
+                display: "flex",
+                marginTop: 8,
+                fontSize: 20,
+                color: "#7c3aed",
+                background: "rgba(124,58,237,0.08)",
+                padding: "6px 20px",
+                borderRadius: 20,
+              }}
+            >
+              {faceType}
             </div>
           )}
         </div>
 
+        {/* CTA */}
         <div
           style={{
             display: "flex",
-            marginTop: 32,
-            fontSize: 22,
-            color: "rgba(255,255,255,0.85)",
+            flexDirection: "column",
+            alignItems: "center",
+            marginTop: 28,
+            gap: 6,
           }}
         >
-          나도 분석해보기
+          <div
+            style={{
+              display: "flex",
+              fontSize: 26,
+              color: "white",
+              fontWeight: 700,
+            }}
+          >
+            넌 누구랑 닮았어? 궁금하지 않아?
+          </div>
+          <div
+            style={{
+              display: "flex",
+              fontSize: 18,
+              color: "rgba(255,255,255,0.7)",
+            }}
+          >
+            사진은 서버에 저장되지 않아요
+          </div>
         </div>
       </div>
     ),
