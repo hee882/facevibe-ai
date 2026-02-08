@@ -12,6 +12,7 @@ export type Region =
 export interface Celebrity {
   name: string;
   nameKo: string;
+  description: string;
   gender: "male" | "female";
   region: Region;
   ratios: FaceRatios;
