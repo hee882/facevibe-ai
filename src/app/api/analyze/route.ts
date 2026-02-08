@@ -3,7 +3,7 @@ import { detectFaces, AzureFaceError } from "@/lib/azure-face";
 import { calculateScore, extractFaceRatios } from "@/lib/scoring";
 import { matchCelebrities } from "@/lib/celebrity-match";
 import { classifyFaceType } from "@/lib/face-type";
-import { saveResult, generateId } from "@/lib/db";
+import { saveResult, generateId, incrementMatchCounts, getMatchCounts } from "@/lib/db";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
@@ -54,22 +54,39 @@ export async function POST(request: NextRequest) {
       return area > largestArea ? face : largest;
     });
 
-    // Step 4: 점수 산출 + 셀럽 매칭 + 얼굴형 분류
+    // 점수 산출 + 셀럽 매칭 + 얼굴형 분류
     const score = calculateScore(mainFace.faceLandmarks, mainFace.faceRectangle);
     const ratios = extractFaceRatios(mainFace.faceLandmarks, mainFace.faceRectangle);
-    const celebrityMatches = matchCelebrities(ratios);
+    const matchResult = matchCelebrities(ratios);
     const faceType = classifyFaceType(mainFace.faceLandmarks, mainFace.faceRectangle);
 
-    // D1에 결과 저장 (Cloudflare 환경에서만 동작, 로컬 dev는 fallback)
+    // D1에 결과 저장 + 매칭 카운터 (Cloudflare 환경에서만 동작)
     let resultId: string;
     try {
       const { getCloudflareContext } = await import("@opennextjs/cloudflare");
       const { env } = await getCloudflareContext();
       resultId = await saveResult(env.DB, {
         score,
-        celebrities: celebrityMatches,
+        celebrities: matchResult.topMatches,
+        surpriseMatch: matchResult.surpriseMatch,
         faceType,
       });
+
+      // 셀럽 매칭 카운터 증가 + 조회
+      const allNames = [
+        ...matchResult.topMatches.map((m) => m.name),
+        ...(matchResult.surpriseMatch ? [matchResult.surpriseMatch.name] : []),
+      ];
+      await incrementMatchCounts(env.DB, allNames);
+      const counts = await getMatchCounts(env.DB, allNames);
+
+      for (const match of matchResult.topMatches) {
+        match.matchCount = counts[match.name] || 1;
+      }
+      if (matchResult.surpriseMatch) {
+        matchResult.surpriseMatch.matchCount =
+          counts[matchResult.surpriseMatch.name] || 1;
+      }
     } catch {
       // 로컬 dev 등 D1 없는 환경에서는 ID만 생성
       resultId = generateId();
@@ -80,7 +97,8 @@ export async function POST(request: NextRequest) {
       id: resultId,
       score: score.total,
       scoreBreakdown: score,
-      celebrityMatches,
+      celebrityMatches: matchResult.topMatches,
+      surpriseMatch: matchResult.surpriseMatch,
       faceType,
     });
   } catch (error) {

@@ -22,6 +22,7 @@ export async function GET(
       score: result.score,
       scoreBreakdown: result.scoreBreakdown,
       celebrityMatches: result.celebrityMatches,
+      surpriseMatch: result.surpriseMatch,
       faceType: result.faceType,
     });
   } catch {
