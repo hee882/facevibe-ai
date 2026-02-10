@@ -1,13 +1,7 @@
 import type { Metadata } from "next";
 import Script from "next/script";
-import { Geist } from "next/font/google";
 import KakaoSDK from "@/components/KakaoSDK";
 import "./globals.css";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   title: "FaceVibe AI — 나의 얼굴 매력 점수는?",
@@ -56,7 +50,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={`${geistSans.variable} font-sans antialiased`}>
+      <body className="font-sans antialiased">
         {children}
         <KakaoSDK />
         {/* Google AdSense — pub ID를 실제 값으로 교체 필요 */}

@@ -7,8 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "deploy": "npx @opennextjs/cloudflare && wrangler deploy",
-    "preview": "npx @opennextjs/cloudflare && wrangler dev"
+    "deploy": "npx @opennextjs/cloudflare build && wrangler deploy",
+    "preview": "npx @opennextjs/cloudflare build && wrangler dev"
   },
   "dependencies": {
     "@opennextjs/cloudflare": "^1.16.3",
